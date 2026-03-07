@@ -1,0 +1,115 @@
+﻿<resources>
+    <string name="app_name">氯课程表</string>
+
+    <string name="settings_title">设置</string>
+    <string name="back">返回</string>
+
+    <string name="settings_semester_section">学期设置</string>
+    <string name="settings_total_weeks">学期总周数</string>
+    <string name="settings_periods_per_day">每日节次数</string>
+    <string name="settings_total_weeks_error">请输入 1-30 的整数</string>
+    <string name="settings_periods_per_day_error">请输入 1-16 的整数</string>
+    <string name="settings_semester_start_date">学期开始日期</string>
+    <string name="settings_not_set">未设置</string>
+    <string name="settings_pick_date">选择日期</string>
+    <string name="settings_show_weekend">显示周末</string>
+
+    <string name="settings_system_section">教务系统</string>
+    <string name="settings_system_url">教务系统 URL</string>
+    <string name="settings_system_url_placeholder">https://jwgl.xxx.edu.cn</string>
+    <string name="settings_system_url_error">请输入有效的教务系统 URL（仅支持 强智教务系统）</string>
+
+    <string name="settings_data_section">数据管理</string>
+    <string name="settings_clear_all_courses">清除全部课表数据</string>
+
+    <string name="settings_confirm_delete_title">确认删除</string>
+    <string name="settings_confirm_delete_message">确定要清除全部课表数据吗？此操作不可恢复。</string>
+    <string name="confirm">确定</string>
+    <string name="cancel">取消</string>
+
+    <string name="import_title">导入课表</string>
+    <string name="import_extract">提取课表</string>
+    <string name="import_success">成功导入 %1$d 门课程</string>
+    <string name="import_status_login_first">请登录教务系统并进入学期理论课表页面</string>
+    <string name="import_status_loaded_url">已加载：%1$s</string>
+    <string name="import_status_extracting">正在提取页面内容…</string>
+    <string name="import_status_parsed">已解析 %1$d 门课程</string>
+    <string name="import_status_saving">正在保存课程…</string>
+    <string name="import_status_done">导入成功</string>
+    <string name="import_status_error">错误：%1$s</string>
+    <string name="import_confirm_title">确认导入</string>
+    <string name="import_confirm_count">解析到 %1$d 门课程</string>
+    <string name="import_confirm_warning">警告：</string>
+    <string name="import_confirm_replace_tip">导入会替换当前全部课表数据，是否继续？</string>
+    <string name="import_confirm_action">确认导入</string>
+
+    <string name="schedule_import">导入课表</string>
+    <string name="schedule_settings">设置</string>
+    <string name="schedule_empty_title">本周暂无课程</string>
+    <string name="schedule_empty_subtitle">点击右上角导入图标获取课表</string>
+    <string name="schedule_prev_week">上一周</string>
+    <string name="schedule_next_week">下一周</string>
+    <string name="schedule_week_label">第%1$d周</string>
+    <string name="schedule_week_with_range">第%1$d周  %2$s</string>
+    <string name="schedule_day_monday">一</string>
+    <string name="schedule_day_tuesday">二</string>
+    <string name="schedule_day_wednesday">三</string>
+    <string name="schedule_day_thursday">四</string>
+    <string name="schedule_day_friday">五</string>
+    <string name="schedule_day_saturday">六</string>
+    <string name="schedule_day_sunday">日</string>
+    <string name="schedule_day_prefix">周%1$s</string>
+    <string name="schedule_month_single">%1$d月</string>
+    <string name="schedule_month_cross">%1$d/%2$d月</string>
+    <string name="schedule_dialog_teacher">教师：%1$s</string>
+    <string name="schedule_dialog_location">教室：%1$s</string>
+    <string name="schedule_dialog_time">时间：周%1$s 第%2$d-%3$d节</string>
+    <string name="schedule_dialog_weeks">周次：第%1$d-%2$d周%3$s</string>
+    <string name="schedule_dialog_close">关闭</string>
+    <string name="schedule_course_card_content_desc">课程：%1$s，教室：%2$s，第%3$d-%4$d节</string>
+    <string name="schedule_open_course_details">查看课程详情</string>
+    <string name="schedule_week_type_odd">（单周）</string>
+    <string name="schedule_week_type_even">（双周）</string>
+
+    <string name="settings_privacy_policy">隐私政策</string>
+    <string name="privacy_title">隐私政策</string>
+    <string name="privacy_content">本应用仅在本地保存你的课表与设置数据，不会主动上传到服务器。\n\n导入课表时，应用会通过你输入的教务系统地址加载网页并在本地解析 HTML 内容。登录凭据由系统 WebView 管理，本应用不采集账号密码文本。\n\n若你后续启用第三方崩溃分析或统计功能，将在隐私政策更新后明确告知并征得同意。\n\n如需清除数据，可在设置页使用“清除全部课表数据”。</string>
+    <string name="settings_page_intro_title">课表偏好</string>
+    <string name="settings_page_intro_subtitle">在这里配置学期参数、教务系统与数据管理。</string>
+    <string name="settings_show_weekend_hint">开启后将在周视图中展示周六与周日。</string>
+
+    <string name="settings_more_section">更多</string>
+    <string name="settings_about_app">关于应用</string>
+    <string name="about_title">关于应用</string>
+    <string name="about_app_name_label">应用名称</string>
+    <string name="about_version_label">版本信息</string>
+    <string name="about_version_value">%1$s (%2$d)</string>
+    <string name="about_package_label">包名</string>
+    <string name="about_author_label">作者</string>
+    <string name="about_author_value">CaCl2</string>
+    <string name="nav_home">今日</string>
+    <string name="nav_schedule">周课表</string>
+    <string name="nav_import">导入</string>
+    <string name="nav_settings">设置</string>
+
+    <string name="home_title">今日课表</string>
+    <string name="home_date_with_day">%1$s 周%2$s</string>
+    <string name="home_week_label">第%1$d周</string>
+    <string name="home_course_count">今日共 %1$d 门课程</string>
+    <string name="home_empty_today">今天没有课程安排</string>
+    <string name="home_period_label">节次：第%1$d-%2$d节</string>
+    <string name="home_location_label">教室：%1$s</string>
+    <string name="home_teacher_label">教师：%1$s</string>
+    <string name="home_weeks_label">周次：第%1$d-%2$d周%3$s</string>
+    <string name="home_subtitle">今日安排一目了然</string>
+    <string name="schedule_title">周课表总览</string>
+    <string name="schedule_subtitle">滑动查看各周课程</string>
+    <string name="import_subtitle">登录教务系统后提取页面课程</string>
+    <string name="settings_subtitle">管理学期参数与数据偏好</string>
+
+    <string name="onboarding_title">首次使用设置</string>
+    <string name="onboarding_subtitle">先填写教务系统地址与学期参数，完成后即可开始导入课表。</string>
+    <string name="onboarding_continue">保存并前往导入课表</string>
+    <string name="onboarding_import_tip">下一步将打开导入页，请登录教务系统并进入学期理论课表页面。</string>
+    <string name="onboarding_semester_date_required">请选择学期开始日期</string>
+</resources>

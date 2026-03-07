@@ -1,0 +1,29 @@
+﻿package com.cacl2.schedule.data.repository
+
+import com.cacl2.schedule.data.local.dao.CourseDao
+import com.cacl2.schedule.data.local.entity.CourseEntity
+import kotlinx.coroutines.flow.Flow
+
+class CourseRepository(private val courseDao: CourseDao) {
+
+    fun getCoursesForWeek(week: Int): Flow<List<CourseEntity>> {
+        return courseDao.getCoursesForWeek(week)
+    }
+
+    fun getAllCourses(): Flow<List<CourseEntity>> {
+        return courseDao.getAllCourses()
+    }
+
+    suspend fun insertAll(courses: List<CourseEntity>) {
+        courseDao.insertAll(courses)
+    }
+
+    suspend fun deleteAll() {
+        courseDao.deleteAll()
+    }
+
+    suspend fun replaceAll(courses: List<CourseEntity>) {
+        courseDao.deleteAll()
+        courseDao.insertAll(courses)
+    }
+}

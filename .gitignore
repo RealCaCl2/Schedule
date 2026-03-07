@@ -1,0 +1,36 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+*.iml
+
+# IDE local state
+.idea/
+.qoder/
+
+# Android / Gradle local files
+.gradle/
+.kotlin/
+local.properties
+
+# Build outputs
+build/
+**/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+app/release/
+*.dm
+
+# Signing keys / secrets
+jks/
+*.jks
+*.keystore
+
+# Logs / temp
+*.log
+*.tmp
+
+nul
