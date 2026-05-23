@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -17,15 +19,22 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -52,6 +61,7 @@ import com.cacl2.schedule.ui.theme.AppDimens
 fun ScheduleScreen(
     courseRepository: CourseRepository,
     settingsRepository: SettingsRepository,
+    onEditCourse: (Long) -> Unit = {},
     viewModel: ScheduleViewModel = viewModel(
         factory = ScheduleViewModel.Factory(courseRepository, settingsRepository)
     )
@@ -61,6 +71,7 @@ fun ScheduleScreen(
     val weekCoursesByWeek by viewModel.weekCoursesByWeek.collectAsState()
 
     var selectedCourse by remember { mutableStateOf<CourseEntity?>(null) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
     var hasAutoJumped by remember { mutableStateOf(false) }
 
     LaunchedEffect(settings.semesterStartDate, settings.totalWeeks) {
@@ -91,7 +102,9 @@ fun ScheduleScreen(
             .collect { page -> viewModel.setCurrentWeek(page + 1) }
     }
 
-    val currentWeekCourses = weekCoursesByWeek[currentWeek].orEmpty()
+    val currentWeekCourses by remember {
+        derivedStateOf { weekCoursesByWeek[currentWeek].orEmpty() }
+    }
 
     Scaffold(
         topBar = {
@@ -106,6 +119,14 @@ fun ScheduleScreen(
                             text = stringResource(R.string.schedule_subtitle),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onEditCourse(0L) }) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = stringResource(R.string.edit_add_course)
                         )
                     }
                 },
@@ -231,11 +252,59 @@ fun ScheduleScreen(
                             weekTypeName(course.weekType)
                         )
                     )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    TextButton(onClick = { showDeleteConfirm = true }) {
+                        Icon(
+                            Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            stringResource(R.string.edit_delete),
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
                 }
             },
             confirmButton = {
+                TextButton(onClick = {
+                    val id = course.id
+                    selectedCourse = null
+                    onEditCourse(id)
+                }) {
+                    Text(stringResource(R.string.edit_button))
+                }
+            },
+            dismissButton = {
                 TextButton(onClick = { selectedCourse = null }) {
                     Text(stringResource(R.string.schedule_dialog_close))
+                }
+            }
+        )
+    }
+
+    if (showDeleteConfirm && selectedCourse != null) {
+        val courseToDelete = selectedCourse!!
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text(stringResource(R.string.edit_delete_confirm_title)) },
+            text = { Text(stringResource(R.string.edit_delete_confirm_message, courseToDelete.courseName)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteCourse(courseToDelete)
+                    showDeleteConfirm = false
+                    selectedCourse = null
+                }) {
+                    Text(
+                        stringResource(R.string.confirm),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirm = false }) {
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

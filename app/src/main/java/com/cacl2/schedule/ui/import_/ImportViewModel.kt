@@ -4,6 +4,7 @@ import android.webkit.WebView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.compose.runtime.Immutable
 import com.cacl2.schedule.data.local.entity.CourseEntity
 import com.cacl2.schedule.data.parser.QiangZhiParser
 import com.cacl2.schedule.data.repository.CourseRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 
+@Immutable
 sealed class ImportState {
     data object Idle : ImportState()
     data object Extracting : ImportState()

@@ -1,5 +1,6 @@
 package com.cacl2.schedule.ui.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,19 +20,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.cacl2.schedule.data.repository.CourseRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
+import com.cacl2.schedule.ui.edit.CourseEditScreen
 import com.cacl2.schedule.ui.home.HomeScreen
 import com.cacl2.schedule.ui.import_.ImportScreen
 import com.cacl2.schedule.ui.onboarding.OnboardingScreen
 import com.cacl2.schedule.ui.schedule.ScheduleScreen
+import com.cacl2.schedule.ui.schedule.ScheduleViewModel
 import com.cacl2.schedule.ui.settings.SettingsScreen
 
 @Composable
@@ -44,6 +51,12 @@ fun NavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val showBottomBar = Screen.bottomNavItems.any { it.route == currentRoute }
+
+    val activity = LocalContext.current as ComponentActivity
+    val sharedScheduleViewModel: ScheduleViewModel = viewModel(
+        factory = ScheduleViewModel.Factory(courseRepository, settingsRepository),
+        viewModelStoreOwner = activity
+    )
 
     var initialStartDestination by remember { mutableStateOf<String?>(null) }
 
@@ -115,13 +128,29 @@ fun NavGraph(
             composable(Screen.Home.route) {
                 HomeScreen(
                     courseRepository = courseRepository,
-                    settingsRepository = settingsRepository
+                    settingsRepository = settingsRepository,
+                    viewModel = sharedScheduleViewModel
                 )
             }
             composable(Screen.Schedule.route) {
                 ScheduleScreen(
                     courseRepository = courseRepository,
-                    settingsRepository = settingsRepository
+                    settingsRepository = settingsRepository,
+                    viewModel = sharedScheduleViewModel,
+                    onEditCourse = { courseId ->
+                        navController.navigate("edit/$courseId")
+                    }
+                )
+            }
+            composable(
+                route = Screen.Edit.route,
+                arguments = listOf(navArgument("courseId") { type = NavType.LongType; defaultValue = 0L })
+            ) { backStackEntry ->
+                val courseId = backStackEntry.arguments?.getLong("courseId") ?: 0L
+                CourseEditScreen(
+                    courseId = courseId,
+                    courseRepository = courseRepository,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
             composable(Screen.Import.route) {

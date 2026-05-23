@@ -1,5 +1,8 @@
 package com.cacl2.schedule.model
 
+import androidx.compose.runtime.Immutable
+
+@Immutable
 data class ScheduleSettings(
     val totalWeeks: Int = 20,
     val periodsPerDay: Int = 12,

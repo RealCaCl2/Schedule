@@ -3,6 +3,7 @@ package com.cacl2.schedule.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -18,6 +19,7 @@ sealed class Screen(
     data object Import : Screen("import", Icons.Default.Download, R.string.nav_import)
     data object Settings : Screen("settings", Icons.Default.Settings, R.string.nav_settings)
     data object Onboarding : Screen("onboarding", Icons.Default.Settings, R.string.nav_settings)
+    data object Edit : Screen("edit/{courseId}", Icons.Default.Edit, R.string.edit_title)
 
     companion object {
         val bottomNavItems = listOf(Home, Schedule, Settings)

@@ -10,10 +10,13 @@ import com.cacl2.schedule.model.ScheduleSettings
 import com.cacl2.schedule.util.WeekUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 
@@ -33,9 +36,9 @@ class ScheduleViewModel(
 
     val weekCoursesByWeek: StateFlow<Map<Int, List<CourseEntity>>> = combine(
         allCourses,
-        settings
-    ) { courses, settingsValue ->
-        val totalWeeks = settingsValue.totalWeeks.coerceAtLeast(1)
+        settings.map { it.totalWeeks }.distinctUntilChanged()
+    ) { courses, totalWeeksValue ->
+        val totalWeeks = totalWeeksValue.coerceAtLeast(1)
         val buckets = Array(totalWeeks + 1) { mutableListOf<CourseEntity>() }
 
         courses.forEach { course ->
@@ -71,10 +74,6 @@ class ScheduleViewModel(
         .flowOn(Dispatchers.Default)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    fun coursesForWeek(week: Int): List<CourseEntity> {
-        return weekCoursesByWeek.value[week].orEmpty()
-    }
-
     fun setCurrentWeek(week: Int) {
         _currentWeek.value = week
     }
@@ -82,6 +81,12 @@ class ScheduleViewModel(
     fun initCurrentWeek(semesterStartDate: String, totalWeeks: Int) {
         val calculated = WeekUtils.calculateCurrentWeek(semesterStartDate)
         _currentWeek.value = calculated.coerceIn(1, totalWeeks)
+    }
+
+    fun deleteCourse(course: CourseEntity) {
+        viewModelScope.launch {
+            courseRepository.delete(course)
+        }
     }
 
     class Factory(

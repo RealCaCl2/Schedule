@@ -16,6 +16,13 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class SettingsRepository(private val context: Context) {
 
+    companion object {
+        const val MAX_TOTAL_WEEKS = 30
+        const val MIN_TOTAL_WEEKS = 1
+        const val MAX_PERIODS_PER_DAY = 16
+        const val MIN_PERIODS_PER_DAY = 1
+    }
+
     private object Keys {
         val TOTAL_WEEKS = intPreferencesKey("total_weeks")
         val PERIODS_PER_DAY = intPreferencesKey("periods_per_day")
@@ -42,12 +49,12 @@ class SettingsRepository(private val context: Context) {
     }
 
     suspend fun updateTotalWeeks(weeks: Int) {
-        val sanitized = weeks.coerceIn(1, 30)
+        val sanitized = weeks.coerceIn(MIN_TOTAL_WEEKS, MAX_TOTAL_WEEKS)
         context.dataStore.edit { it[Keys.TOTAL_WEEKS] = sanitized }
     }
 
     suspend fun updatePeriodsPerDay(periods: Int) {
-        val sanitized = periods.coerceIn(1, 16)
+        val sanitized = periods.coerceIn(MIN_PERIODS_PER_DAY, MAX_PERIODS_PER_DAY)
         context.dataStore.edit { it[Keys.PERIODS_PER_DAY] = sanitized }
     }
 
@@ -69,8 +76,8 @@ class SettingsRepository(private val context: Context) {
         semesterStartDate: String,
         qiangzhiUrl: String
     ) {
-        val sanitizedWeeks = totalWeeks.coerceIn(1, 30)
-        val sanitizedPeriods = periodsPerDay.coerceIn(1, 16)
+        val sanitizedWeeks = totalWeeks.coerceIn(MIN_TOTAL_WEEKS, MAX_TOTAL_WEEKS)
+        val sanitizedPeriods = periodsPerDay.coerceIn(MIN_PERIODS_PER_DAY, MAX_PERIODS_PER_DAY)
         val sanitizedDate = semesterStartDate.trim()
         val sanitizedUrl = qiangzhiUrl.trim()
 

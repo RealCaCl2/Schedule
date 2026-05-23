@@ -6,6 +6,10 @@ import kotlinx.coroutines.flow.Flow
 
 class CourseRepository(private val courseDao: CourseDao) {
 
+    suspend fun getCourseById(id: Long): CourseEntity? {
+        return courseDao.getCourseById(id)
+    }
+
     fun getCoursesForWeek(week: Int): Flow<List<CourseEntity>> {
         return courseDao.getCoursesForWeek(week)
     }
@@ -22,8 +26,19 @@ class CourseRepository(private val courseDao: CourseDao) {
         courseDao.deleteAll()
     }
 
+    suspend fun insert(course: CourseEntity) {
+        courseDao.insert(course)
+    }
+
+    suspend fun update(course: CourseEntity) {
+        courseDao.update(course)
+    }
+
+    suspend fun delete(course: CourseEntity) {
+        courseDao.delete(course)
+    }
+
     suspend fun replaceAll(courses: List<CourseEntity>) {
-        courseDao.deleteAll()
-        courseDao.insertAll(courses)
+        courseDao.replaceAll(courses)
     }
 }

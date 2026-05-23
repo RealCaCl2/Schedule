@@ -4,7 +4,6 @@ import androidx.compose.ui.unit.dp
 
 object AppDimens {
     val ScreenHorizontal = 16.dp
-    val SectionGap = 14.dp
     val ItemGap = 10.dp
     val CardPadding = 14.dp
     val HeroPadding = 18.dp
