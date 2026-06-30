@@ -4,12 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.Immutable
+import android.app.Application
 import com.cacl2.schedule.data.local.entity.CourseEntity
 import com.cacl2.schedule.data.repository.CourseRepository
+import com.cacl2.schedule.data.repository.SettingsRepository
 import com.cacl2.schedule.util.CourseColorMapper
+import com.cacl2.schedule.widget.WidgetUpdater
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -43,7 +48,9 @@ sealed class EditValidationError {
 }
 
 class CourseEditViewModel(
-    private val courseRepository: CourseRepository
+    private val courseRepository: CourseRepository,
+    private val settingsRepository: SettingsRepository,
+    private val application: Application
 ) : ViewModel() {
 
     private var courseId: Long = 0
@@ -53,6 +60,11 @@ class CourseEditViewModel(
 
     private val _saveState = MutableStateFlow<EditSaveState>(EditSaveState.Idle)
     val saveState: StateFlow<EditSaveState> = _saveState.asStateFlow()
+
+    private val _conflicts = MutableStateFlow<List<CourseEntity>>(emptyList())
+    val conflicts: StateFlow<List<CourseEntity>> = _conflicts.asStateFlow()
+
+    private var conflictJob: Job? = null
 
     fun loadCourse(id: Long) {
         courseId = id
@@ -75,6 +87,7 @@ class CourseEditViewModel(
 
     fun updateCourseName(value: String) {
         _formState.update { it.copy(courseName = value) }
+        checkConflicts()
     }
 
     fun updateTeacher(value: String) {
@@ -87,30 +100,63 @@ class CourseEditViewModel(
 
     fun updateDayOfWeek(value: Int) {
         _formState.update { it.copy(dayOfWeek = value) }
+        checkConflicts()
     }
 
     fun updateStartPeriod(value: String) {
         _formState.update { it.copy(startPeriod = value) }
+        checkConflicts()
     }
 
     fun updateEndPeriod(value: String) {
         _formState.update { it.copy(endPeriod = value) }
+        checkConflicts()
     }
 
     fun updateStartWeek(value: String) {
         _formState.update { it.copy(startWeek = value) }
+        checkConflicts()
     }
 
     fun updateEndWeek(value: String) {
         _formState.update { it.copy(endWeek = value) }
+        checkConflicts()
     }
 
     fun updateWeekType(value: Int) {
         _formState.update { it.copy(weekType = value) }
+        checkConflicts()
     }
 
     fun resetSaveState() {
         _saveState.value = EditSaveState.Idle
+    }
+
+    private fun checkConflicts() {
+        val state = _formState.value
+        val sp = state.startPeriod.toIntOrNull()
+        val ep = state.endPeriod.toIntOrNull()
+        val sw = state.startWeek.toIntOrNull()
+        val ew = state.endWeek.toIntOrNull()
+        if (sp == null || ep == null || sw == null || ew == null || sp < 1 || ep < 1 || sw < 1 || ew < 1) {
+            _conflicts.value = emptyList()
+            return
+        }
+
+        conflictJob?.cancel()
+        conflictJob = viewModelScope.launch {
+            val activeSemesterId = settingsRepository.activeSemesterId.first()
+            _conflicts.value = courseRepository.findConflictingCourses(
+                semesterId = activeSemesterId,
+                excludeId = courseId,
+                dayOfWeek = state.dayOfWeek,
+                startPeriod = sp,
+                endPeriod = ep,
+                startWeek = sw,
+                endWeek = ew,
+                weekType = state.weekType
+            )
+        }
     }
 
     fun save(): EditValidationError? {
@@ -133,28 +179,31 @@ class CourseEditViewModel(
             return EditValidationError.InvalidWeekRange
         }
 
-        val course = CourseEntity(
-            id = courseId,
-            courseName = name,
-            teacher = state.teacher.trim(),
-            location = state.location.trim(),
-            dayOfWeek = day,
-            startPeriod = sp,
-            endPeriod = ep,
-            startWeek = sw,
-            endWeek = ew,
-            weekType = state.weekType,
-            colorIndex = CourseColorMapper.getColorIndex(name)
-        )
-
         _saveState.value = EditSaveState.Saving
         viewModelScope.launch {
             try {
+                val semesterId = settingsRepository.activeSemesterId.first()
+                val course = CourseEntity(
+                    id = courseId,
+                    courseName = name,
+                    teacher = state.teacher.trim(),
+                    location = state.location.trim(),
+                    dayOfWeek = day,
+                    startPeriod = sp,
+                    endPeriod = ep,
+                    startWeek = sw,
+                    endWeek = ew,
+                    weekType = state.weekType,
+                    colorIndex = CourseColorMapper.getColorIndex(name),
+                    semesterId = semesterId
+                )
+
                 if (courseId == 0L) {
                     courseRepository.insert(course)
                 } else {
                     courseRepository.update(course)
                 }
+                WidgetUpdater.updateAllWidgets(application)
                 _saveState.value = EditSaveState.Success
             } catch (e: Exception) {
                 _saveState.value = EditSaveState.Error(e.message ?: "保存失败")
@@ -165,11 +214,13 @@ class CourseEditViewModel(
     }
 
     class Factory(
-        private val courseRepository: CourseRepository
+        private val courseRepository: CourseRepository,
+        private val settingsRepository: SettingsRepository,
+        private val application: Application
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return CourseEditViewModel(courseRepository) as T
+            return CourseEditViewModel(courseRepository, settingsRepository, application) as T
         }
     }
 }

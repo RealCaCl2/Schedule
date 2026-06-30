@@ -32,6 +32,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.cacl2.schedule.data.repository.CourseRepository
+import com.cacl2.schedule.data.repository.SemesterRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
 import com.cacl2.schedule.ui.edit.CourseEditScreen
 import com.cacl2.schedule.ui.home.HomeScreen
@@ -45,7 +46,8 @@ import com.cacl2.schedule.ui.settings.SettingsScreen
 fun NavGraph(
     navController: NavHostController,
     courseRepository: CourseRepository,
-    settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository,
+    semesterRepository: SemesterRepository
 ) {
     val onboardingCompleted by settingsRepository.onboardingCompleted.collectAsState(initial = null)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -53,8 +55,9 @@ fun NavGraph(
     val showBottomBar = Screen.bottomNavItems.any { it.route == currentRoute }
 
     val activity = LocalContext.current as ComponentActivity
+    val application = activity.application
     val sharedScheduleViewModel: ScheduleViewModel = viewModel(
-        factory = ScheduleViewModel.Factory(courseRepository, settingsRepository),
+        factory = ScheduleViewModel.Factory(courseRepository, settingsRepository, semesterRepository, application),
         viewModelStoreOwner = activity
     )
 
@@ -79,12 +82,16 @@ fun NavGraph(
                         NavigationBarItem(
                             selected = currentRoute == screen.route,
                             onClick = {
-                                navController.navigate(screen.route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
+                                if (screen == Screen.Schedule && currentRoute == Screen.Schedule.route) {
+                                    sharedScheduleViewModel.jumpToCurrentWeek()
+                                } else {
+                                    navController.navigate(screen.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
                                     }
-                                    launchSingleTop = true
-                                    restoreState = true
                                 }
                             },
                             icon = { Icon(screen.icon, contentDescription = null) },
@@ -116,8 +123,15 @@ fun NavGraph(
             composable(Screen.Onboarding.route) {
                 OnboardingScreen(
                     settingsRepository = settingsRepository,
+                    semesterRepository = semesterRepository,
                     onComplete = {
                         navController.navigate(Screen.Import.route) {
+                            popUpTo(Screen.Onboarding.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    },
+                    onScanComplete = {
+                        navController.navigate(Screen.Home.route) {
                             popUpTo(Screen.Onboarding.route) { inclusive = true }
                             launchSingleTop = true
                         }
@@ -129,6 +143,7 @@ fun NavGraph(
                 HomeScreen(
                     courseRepository = courseRepository,
                     settingsRepository = settingsRepository,
+                    semesterRepository = semesterRepository,
                     viewModel = sharedScheduleViewModel
                 )
             }
@@ -136,6 +151,7 @@ fun NavGraph(
                 ScheduleScreen(
                     courseRepository = courseRepository,
                     settingsRepository = settingsRepository,
+                    semesterRepository = semesterRepository,
                     viewModel = sharedScheduleViewModel,
                     onEditCourse = { courseId ->
                         navController.navigate("edit/$courseId")
@@ -150,6 +166,7 @@ fun NavGraph(
                 CourseEditScreen(
                     courseId = courseId,
                     courseRepository = courseRepository,
+                    settingsRepository = settingsRepository,
                     onNavigateBack = { navController.popBackStack() }
                 )
             }
@@ -172,6 +189,7 @@ fun NavGraph(
                 SettingsScreen(
                     settingsRepository = settingsRepository,
                     courseRepository = courseRepository,
+                    semesterRepository = semesterRepository,
                     onImportClick = {
                         navController.navigate(Screen.Import.route) {
                             launchSingleTop = true

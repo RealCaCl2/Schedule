@@ -1,4 +1,4 @@
-﻿package com.cacl2.schedule.data.repository
+package com.cacl2.schedule.data.repository
 
 import com.cacl2.schedule.data.local.dao.CourseDao
 import com.cacl2.schedule.data.local.entity.CourseEntity
@@ -10,12 +10,16 @@ class CourseRepository(private val courseDao: CourseDao) {
         return courseDao.getCourseById(id)
     }
 
-    fun getCoursesForWeek(week: Int): Flow<List<CourseEntity>> {
-        return courseDao.getCoursesForWeek(week)
+    fun getCoursesForWeek(week: Int, semesterId: String): Flow<List<CourseEntity>> {
+        return courseDao.getCoursesForWeek(week, semesterId)
     }
 
-    fun getAllCourses(): Flow<List<CourseEntity>> {
-        return courseDao.getAllCourses()
+    suspend fun getCoursesForWeekOnce(week: Int, semesterId: String): List<CourseEntity> {
+        return courseDao.getCoursesForWeekOnce(week, semesterId)
+    }
+
+    fun getAllCourses(semesterId: String): Flow<List<CourseEntity>> {
+        return courseDao.getAllCourses(semesterId)
     }
 
     suspend fun insertAll(courses: List<CourseEntity>) {
@@ -24,6 +28,10 @@ class CourseRepository(private val courseDao: CourseDao) {
 
     suspend fun deleteAll() {
         courseDao.deleteAll()
+    }
+
+    suspend fun deleteAllBySemester(semesterId: String) {
+        courseDao.deleteAllBySemester(semesterId)
     }
 
     suspend fun insert(course: CourseEntity) {
@@ -38,7 +46,23 @@ class CourseRepository(private val courseDao: CourseDao) {
         courseDao.delete(course)
     }
 
-    suspend fun replaceAll(courses: List<CourseEntity>) {
-        courseDao.replaceAll(courses)
+    suspend fun replaceAll(courses: List<CourseEntity>, semesterId: String) {
+        courseDao.replaceAll(courses, semesterId)
+    }
+
+    suspend fun findConflictingCourses(
+        semesterId: String,
+        excludeId: Long,
+        dayOfWeek: Int,
+        startPeriod: Int,
+        endPeriod: Int,
+        startWeek: Int,
+        endWeek: Int,
+        weekType: Int
+    ): List<CourseEntity> {
+        return courseDao.findConflictingCourses(
+            semesterId, excludeId, dayOfWeek,
+            startPeriod, endPeriod, startWeek, endWeek, weekType
+        )
     }
 }

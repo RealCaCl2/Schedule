@@ -6,15 +6,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.compose.runtime.Immutable
 import com.cacl2.schedule.data.local.entity.CourseEntity
+import android.app.Application
 import com.cacl2.schedule.data.parser.QiangZhiParser
 import com.cacl2.schedule.data.repository.CourseRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
+import com.cacl2.schedule.widget.WidgetUpdater
 import com.cacl2.schedule.model.ScheduleSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,7 +35,8 @@ sealed class ImportState {
 
 class ImportViewModel(
     private val courseRepository: CourseRepository,
-    settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val application: Application
 ) : ViewModel() {
 
     val settings: StateFlow<ScheduleSettings> = settingsRepository.settings
@@ -94,7 +98,9 @@ class ImportViewModel(
         viewModelScope.launch {
             _importState.value = ImportState.Saving
             try {
-                courseRepository.replaceAll(courses)
+                val semesterId = settingsRepository.activeSemesterId.first()
+                courseRepository.replaceAll(courses, semesterId)
+                WidgetUpdater.updateAllWidgets(application)
                 _importState.value = ImportState.Success(courses.size)
             } catch (e: Exception) {
                 _importState.value = ImportState.Error("Failed to save courses: ${e.message}")
@@ -144,11 +150,12 @@ class ImportViewModel(
 
     class Factory(
         private val courseRepository: CourseRepository,
-        private val settingsRepository: SettingsRepository
+        private val settingsRepository: SettingsRepository,
+        private val application: Application
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ImportViewModel(courseRepository, settingsRepository) as T
+            return ImportViewModel(courseRepository, settingsRepository, application) as T
         }
     }
 

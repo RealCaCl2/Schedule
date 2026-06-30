@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.app.Application
 import com.cacl2.schedule.R
 import com.cacl2.schedule.data.repository.CourseRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
@@ -57,7 +58,11 @@ fun ImportScreen(
     settingsRepository: SettingsRepository,
     onImportSuccess: () -> Unit,
     viewModel: ImportViewModel = viewModel(
-        factory = ImportViewModel.Factory(courseRepository, settingsRepository)
+        factory = ImportViewModel.Factory(
+            courseRepository,
+            settingsRepository,
+            application = LocalContext.current.applicationContext as Application
+        )
     )
 ) {
     val settings by viewModel.settings.collectAsState()

@@ -2,7 +2,6 @@
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -38,13 +37,15 @@ fun ScheduleGrid(
     showWeekend: Boolean,
     semesterStartDate: String,
     currentWeek: Int,
+    isDarkTheme: Boolean,
+    showTeacher: Boolean = true,
+    showLocation: Boolean = true,
     onCourseClick: (CourseEntity) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val cellHeight: Dp = 58.dp
     val timeColumnWidth: Dp = 30.dp
     val dayCount = if (showWeekend) 7 else 5
-    val isDarkTheme = isSystemInDarkTheme()
     val coursesByDay = remember(courses) { courses.groupBy { it.dayOfWeek } }
 
     val weekDates = remember(semesterStartDate, currentWeek, showWeekend) {
@@ -173,6 +174,8 @@ fun ScheduleGrid(
                                 cellHeight = cellHeight,
                                 dayWidth = dayWidth,
                                 isDarkTheme = isDarkTheme,
+                                showTeacher = showTeacher,
+                                showLocation = showLocation,
                                 onClick = { onCourseClick(course) },
                                 modifier = Modifier.offset(y = yOffset)
                             )

@@ -4,11 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.cacl2.schedule.data.local.entity.CourseEntity
+import com.cacl2.schedule.data.local.entity.SemesterEntity
+import android.app.Application
 import com.cacl2.schedule.data.repository.CourseRepository
+import com.cacl2.schedule.data.repository.SemesterRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
 import com.cacl2.schedule.model.ScheduleSettings
 import com.cacl2.schedule.util.WeekUtils
+import com.cacl2.schedule.widget.WidgetUpdater
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,27 +21,50 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ScheduleViewModel(
     private val courseRepository: CourseRepository,
-    settingsRepository: SettingsRepository
+    settingsRepository: SettingsRepository,
+    private val semesterRepository: SemesterRepository,
+    private val application: Application
 ) : ViewModel() {
 
     val settings: StateFlow<ScheduleSettings> = settingsRepository.settings
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ScheduleSettings())
 
+    val activeSemesterId: StateFlow<String> = settingsRepository.activeSemesterId
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "default")
+
+    val allSemesters: StateFlow<List<SemesterEntity>?> = semesterRepository.getAllSemesters()
+        .map { it as List<SemesterEntity>? }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val activeSemester: StateFlow<SemesterEntity?> = activeSemesterId
+        .flatMapLatest { id ->
+            combine(
+                semesterRepository.getAllSemesters(),
+                settingsRepository.settings
+            ) { semesters, _ ->
+                semesters.find { it.id == id }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     private val _currentWeek = MutableStateFlow(1)
     val currentWeek: StateFlow<Int> = _currentWeek.asStateFlow()
 
-    val allCourses: StateFlow<List<CourseEntity>> = courseRepository.getAllCourses()
+    val allCourses: StateFlow<List<CourseEntity>> = activeSemesterId
+        .flatMapLatest { courseRepository.getAllCourses(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val weekCoursesByWeek: StateFlow<Map<Int, List<CourseEntity>>> = combine(
         allCourses,
-        settings.map { it.totalWeeks }.distinctUntilChanged()
+        activeSemester.map { it?.totalWeeks ?: 20 }.distinctUntilChanged()
     ) { courses, totalWeeksValue ->
         val totalWeeks = totalWeeksValue.coerceAtLeast(1)
         val buckets = Array(totalWeeks + 1) { mutableListOf<CourseEntity>() }
@@ -83,19 +111,29 @@ class ScheduleViewModel(
         _currentWeek.value = calculated.coerceIn(1, totalWeeks)
     }
 
+    fun jumpToCurrentWeek() {
+        val semester = activeSemester.value
+        if (semester != null && semester.startDate.isNotBlank()) {
+            initCurrentWeek(semester.startDate, semester.totalWeeks)
+        }
+    }
+
     fun deleteCourse(course: CourseEntity) {
         viewModelScope.launch {
             courseRepository.delete(course)
+            WidgetUpdater.updateAllWidgets(application)
         }
     }
 
     class Factory(
         private val courseRepository: CourseRepository,
-        private val settingsRepository: SettingsRepository
+        private val settingsRepository: SettingsRepository,
+        private val semesterRepository: SemesterRepository,
+        private val application: Application
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return ScheduleViewModel(courseRepository, settingsRepository) as T
+            return ScheduleViewModel(courseRepository, settingsRepository, semesterRepository, application) as T
         }
     }
 }

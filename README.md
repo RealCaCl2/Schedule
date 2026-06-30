@@ -1,4 +1,4 @@
-﻿# 氯课程表 (Schedule)
+﻿# 轻课表 (Schedule)
 
 一个基于 Jetpack Compose 的 Android 课程表应用，支持通过强智教务系统网页导入课程，并在本地离线查看周课表与今日课表。
 

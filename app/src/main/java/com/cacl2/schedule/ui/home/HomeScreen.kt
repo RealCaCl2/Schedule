@@ -1,9 +1,11 @@
-﻿package com.cacl2.schedule.ui.home
+package com.cacl2.schedule.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
@@ -34,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cacl2.schedule.R
 import com.cacl2.schedule.data.local.entity.CourseEntity
 import com.cacl2.schedule.data.repository.CourseRepository
+import com.cacl2.schedule.data.repository.SemesterRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
 import com.cacl2.schedule.ui.schedule.ScheduleViewModel
 import com.cacl2.schedule.ui.theme.AppDimens
@@ -45,17 +49,23 @@ import java.time.format.DateTimeFormatter
 fun HomeScreen(
     courseRepository: CourseRepository,
     settingsRepository: SettingsRepository,
+    semesterRepository: SemesterRepository,
     viewModel: ScheduleViewModel = viewModel(
-        factory = ScheduleViewModel.Factory(courseRepository, settingsRepository)
+        factory = ScheduleViewModel.Factory(
+            courseRepository, settingsRepository, semesterRepository,
+            application = androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
     )
 ) {
     val settings by viewModel.settings.collectAsState()
     val currentWeek by viewModel.currentWeek.collectAsState()
     val weekCoursesByWeek by viewModel.weekCoursesByWeek.collectAsState()
+    val activeSemester by viewModel.activeSemester.collectAsState()
 
-    LaunchedEffect(settings.semesterStartDate, settings.totalWeeks) {
-        if (settings.semesterStartDate.isNotBlank()) {
-            viewModel.initCurrentWeek(settings.semesterStartDate, settings.totalWeeks)
+    LaunchedEffect(activeSemester) {
+        val semester = activeSemester
+        if (semester != null && semester.startDate.isNotBlank()) {
+            viewModel.initCurrentWeek(semester.startDate, semester.totalWeeks)
         }
     }
 
@@ -109,16 +119,13 @@ fun HomeScreen(
 
                 if (todayCourses.isEmpty()) {
                     item {
-                        ElevatedCard(
-                            colors = CardDefaults.elevatedCardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            ),
-                            shape = RoundedCornerShape(AppDimens.RadiusMedium)
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 40.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
                                 text = stringResource(R.string.home_empty_today),
-                                style = MaterialTheme.typography.bodyMedium,
-                                modifier = Modifier.padding(16.dp),
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
@@ -127,15 +134,18 @@ fun HomeScreen(
                     item {
                         Text(
                             text = stringResource(R.string.home_course_count, todayCourses.size),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
                         )
                     }
                     itemsIndexed(todayCourses, key = { _, course -> course.id }) { index, course ->
                         TodayCourseTimelineCard(
                             course = course,
-                            isLast = index == todayCourses.lastIndex
+                            isLast = index == todayCourses.lastIndex,
+                            showTeacher = settings.showTeacher,
+                            showLocation = settings.showLocation
                         )
                     }
                 }
@@ -176,67 +186,46 @@ private fun TodayHeader(today: LocalDate, currentWeek: Int) {
 @Composable
 private fun TodayCourseTimelineCard(
     course: CourseEntity,
-    isLast: Boolean
+    isLast: Boolean,
+    showTeacher: Boolean = true,
+    showLocation: Boolean = true
 ) {
-    val location = course.location.ifBlank { stringResource(R.string.settings_not_set) }
-    val teacher = course.teacher.ifBlank { stringResource(R.string.settings_not_set) }
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Column(
-            modifier = Modifier.width(54.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier.width(36.dp).padding(top = 2.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = "${course.startPeriod}-${course.endPeriod}节",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
-            if (!isLast) {
-                Text(
-                    text = "|",
-                    color = MaterialTheme.colorScheme.outline,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+            Text("${course.startPeriod}", style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+            if (course.endPeriod > course.startPeriod) {
+                Text("·", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.outline)
+                Text("${course.endPeriod}", style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             }
+            if (!isLast) Box(Modifier.width(1.dp).height(14.dp).background(MaterialTheme.colorScheme.outlineVariant))
         }
 
         ElevatedCard(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(AppDimens.RadiusMedium),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.5.dp),
             colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
-                modifier = Modifier.padding(AppDimens.CardPadding),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier.padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                Text(
-                    text = course.courseName,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                Text(course.courseName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                val info = listOfNotNull(
+                    if (showLocation) course.location.ifBlank { null } else null,
+                    if (showTeacher) course.teacher.ifBlank { null } else null
                 )
+                if (info.isNotEmpty()) Text(info.joinToString(" · "), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(
-                    text = stringResource(R.string.home_location_label, location),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(R.string.home_teacher_label, teacher),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = stringResource(
-                        R.string.home_weeks_label,
-                        course.startWeek,
-                        course.endWeek,
-                        weekTypeLabel(course.weekType)
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    stringResource(R.string.home_weeks_label, course.startWeek, course.endWeek, weekTypeLabel(course.weekType)),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             }
         }

@@ -10,7 +10,8 @@ import androidx.room.PrimaryKey
     tableName = "courses",
     indices = [
         Index(value = ["startWeek", "endWeek"]),
-        Index(value = ["dayOfWeek", "startPeriod"])
+        Index(value = ["dayOfWeek", "startPeriod"]),
+        Index(value = ["semesterId"])
     ]
 )
 data class CourseEntity(
@@ -25,5 +26,6 @@ data class CourseEntity(
     val startWeek: Int,
     val endWeek: Int,
     val weekType: Int = 0,
-    val colorIndex: Int = 0
+    val colorIndex: Int = 0,
+    val semesterId: String = "default"
 )

@@ -1,52 +1,51 @@
-﻿<resources>
-    <string name="app_name">氯课程表</string>
+<resources>
+    <string name="app_name">轻课表</string>
 
     <string name="settings_title">设置</string>
     <string name="back">返回</string>
 
-    <string name="settings_semester_section">学期设置</string>
     <string name="settings_total_weeks">学期总周数</string>
     <string name="settings_periods_per_day">每日节次数</string>
     <string name="settings_total_weeks_error">请输入 1-30 的整数</string>
     <string name="settings_periods_per_day_error">请输入 1-16 的整数</string>
     <string name="settings_semester_start_date">学期开始日期</string>
     <string name="settings_not_set">未设置</string>
-    <string name="settings_pick_date">选择日期</string>
     <string name="settings_show_weekend">显示周末</string>
 
     <string name="settings_system_section">教务系统</string>
     <string name="settings_system_url">教务系统 URL</string>
+    <string name="settings_url_custom">自定义</string>
     <string name="settings_system_url_placeholder">https://jwgl.xxx.edu.cn</string>
-    <string name="settings_system_url_error">请输入有效的教务系统 URL（仅支持 强智教务系统）</string>
+    <string name="settings_system_url_error">请输入有效的教务系统 URL</string>
 
-    <string name="settings_data_section">数据管理</string>
-    <string name="settings_clear_all_courses">清除全部课表数据</string>
+    <string name="settings_data_section">数据</string>
+    <string name="settings_danger_section">危险操作</string>
+    <string name="settings_clear_all_courses">清除全部课程</string>
 
     <string name="settings_confirm_delete_title">确认删除</string>
-    <string name="settings_confirm_delete_message">确定要清除全部课表数据吗？此操作不可恢复。</string>
+    <string name="settings_confirm_delete_message">确定要清除全部课程吗？此操作不可恢复。</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
 
     <string name="import_title">导入课表</string>
+    <string name="import_jiaowu">教务系统导入</string>
     <string name="import_extract">提取课表</string>
-    <string name="import_success">成功导入 %1$d 门课程</string>
-    <string name="import_status_login_first">请登录教务系统并进入学期理论课表页面</string>
-    <string name="import_status_loaded_url">已加载：%1$s</string>
-    <string name="import_status_extracting">正在提取页面内容…</string>
-    <string name="import_status_parsed">已解析 %1$d 门课程</string>
-    <string name="import_status_saving">正在保存课程…</string>
-    <string name="import_status_done">导入成功</string>
-    <string name="import_status_error">错误：%1$s</string>
+    <string name="import_success">已导入 %1$d 门课程</string>
+    <string name="import_status_login_first">请登录教务系统，进入课表页面</string>
+    <string name="import_status_loaded_url">已加载 %1$s</string>
+    <string name="import_status_extracting">正在读取课表…</string>
+    <string name="import_status_parsed">识别到 %1$d 门课程</string>
+    <string name="import_status_saving">正在保存…</string>
+    <string name="import_status_done">导入完成</string>
+    <string name="import_status_error">%1$s</string>
     <string name="import_confirm_title">确认导入</string>
     <string name="import_confirm_count">解析到 %1$d 门课程</string>
-    <string name="import_confirm_warning">警告：</string>
-    <string name="import_confirm_replace_tip">导入会替换当前全部课表数据，是否继续？</string>
+    <string name="import_confirm_warning">注意</string>
+    <string name="import_confirm_replace_tip">导入将替换当前学期的全部课程，是否继续？</string>
     <string name="import_confirm_action">确认导入</string>
 
-    <string name="schedule_import">导入课表</string>
-    <string name="schedule_settings">设置</string>
-    <string name="schedule_empty_title">本周暂无课程</string>
-    <string name="schedule_empty_subtitle">点击右上角导入图标获取课表</string>
+    <string name="schedule_no_semester_title">还没有学期</string>
+    <string name="schedule_no_semester_subtitle">在设置中添加学期，就可以看到课表了</string>
     <string name="schedule_prev_week">上一周</string>
     <string name="schedule_next_week">下一周</string>
     <string name="schedule_week_label">第%1$d周</string>
@@ -73,45 +72,52 @@
 
     <string name="settings_privacy_policy">隐私政策</string>
     <string name="privacy_title">隐私政策</string>
-    <string name="privacy_content">本应用仅在本地保存你的课表与设置数据，不会主动上传到服务器。\n\n导入课表时，应用会通过你输入的教务系统地址加载网页并在本地解析 HTML 内容。登录凭据由系统 WebView 管理，本应用不采集账号密码文本。\n\n若你后续启用第三方崩溃分析或统计功能，将在隐私政策更新后明确告知并征得同意。\n\n如需清除数据，可在设置页使用“清除全部课表数据”。</string>
-    <string name="settings_page_intro_title">课表偏好</string>
-    <string name="settings_page_intro_subtitle">在这里配置学期参数、教务系统与数据管理。</string>
-    <string name="settings_show_weekend_hint">开启后将在周视图中展示周六与周日。</string>
+    <string name="privacy_content">轻课表是一款本地化课程管理工具，我们高度重视你的隐私。\n\n【数据存储】\n你的课表数据与设置信息仅保存在设备本地，我们不会收集、上传或分享你的任何个人数据。\n\n【教务系统导入】\n导入课表时，应用通过你指定的教务系统地址加载网页并在本地解析 HTML 内容。登录凭据由系统 WebView 自行管理，本应用不获取、不存储你的账号密码。\n\n【二维码分享】\n课表二维码由本应用在本地生成，包含学期信息和课程数据。仅当你主动向他人展示二维码时，对方才能获取你的课表。\n\n【相机与相册】\n扫码导入功能需要访问相机以扫描二维码，或访问相册以识别图片中的二维码。相机仅在扫码时使用，相册仅在主动选择图片时读取，不会在后台收集任何信息。\n\n【桌面小组件】\n桌面小组件仅在本地读取并展示课程数据，不会上传任何信息。\n\n【检查更新】\n应用在首次启动时及每 24 小时会自动检查一次版本更新，检查过程仅请求你指定的更新服务器地址，获取最新的版本号、更新日志和安装包下载链接。除 HTTP 请求外，不会上传任何设备信息或个人数据。APK 下载到本地缓存目录，安装完成后自动清除。\n\n【外观设置】\n你可以在设置中独立控制教师姓名和教室位置的显示。关闭后课程卡片仅显示课程名称，该设置仅影响本地显示，不影响数据存储。\n\n【第三方服务】\n本应用未集成任何第三方分析、统计或广告服务。\n\n【数据清除】\n你可以在设置中使用“清除全部课表数据”功能随时删除所有本地数据。</string>
+    <string name="settings_show_weekend_hint">开启后会在课表中显示周六和周日</string>
+    <string name="settings_show_teacher">显示教师</string>
+    <string name="settings_show_teacher_hint">关闭后课程卡片不显示教师名称</string>
+    <string name="settings_show_location">显示教室</string>
+    <string name="settings_show_location_hint">关闭后课程卡片不显示教室信息</string>
 
-    <string name="settings_more_section">更多</string>
-    <string name="settings_about_app">关于应用</string>
-    <string name="about_title">关于应用</string>
+    <string name="settings_appearance_section">外观</string>
+    <string name="settings_theme_mode">主题模式</string>
+    <string name="settings_theme_system">跟随系统</string>
+    <string name="settings_theme_light">浅色模式</string>
+    <string name="settings_theme_dark">深色模式</string>
+
+    <string name="settings_more_section">关于</string>
+    <string name="settings_about_app">关于轻课表</string>
+    <string name="about_title">关于轻课表</string>
     <string name="about_app_name_label">应用名称</string>
-    <string name="about_version_label">版本信息</string>
+    <string name="about_version_label">版本</string>
     <string name="about_version_value">%1$s (%2$d)</string>
     <string name="about_package_label">包名</string>
     <string name="about_author_label">作者</string>
     <string name="about_author_value">CaCl2</string>
-    <string name="nav_home">今日</string>
-    <string name="nav_schedule">周课表</string>
+    <string name="nav_home">今天</string>
+    <string name="nav_schedule">课表</string>
     <string name="nav_import">导入</string>
     <string name="nav_settings">设置</string>
 
-    <string name="home_title">今日课表</string>
+    <string name="home_title">今天</string>
     <string name="home_date_with_day">%1$s 周%2$s</string>
     <string name="home_week_label">第%1$d周</string>
-    <string name="home_course_count">今日共 %1$d 门课程</string>
-    <string name="home_empty_today">今天没有课程安排</string>
-    <string name="home_period_label">节次：第%1$d-%2$d节</string>
-    <string name="home_location_label">教室：%1$s</string>
-    <string name="home_teacher_label">教师：%1$s</string>
-    <string name="home_weeks_label">周次：第%1$d-%2$d周%3$s</string>
-    <string name="home_subtitle">今日安排一目了然</string>
-    <string name="schedule_title">周课表总览</string>
-    <string name="schedule_subtitle">滑动查看各周课程</string>
-    <string name="import_subtitle">登录教务系统后提取页面课程</string>
-    <string name="settings_subtitle">管理学期参数与数据偏好</string>
+    <string name="home_course_count">共 %1$d 门课</string>
+    <string name="home_empty_today">今天没有课，好好休息</string>
+    <string name="home_weeks_label">第%1$d-%2$d周%3$s</string>
+    <string name="home_subtitle">今日课程</string>
+    <string name="schedule_title">课表</string>
+    <string name="schedule_subtitle">一周课表</string>
+    <string name="import_subtitle">登录教务系统，提取课程</string>
+    <string name="settings_subtitle">学期 · 外观 · 数据</string>
 
-    <string name="onboarding_title">首次使用设置</string>
-    <string name="onboarding_subtitle">先填写教务系统地址与学期参数，完成后即可开始导入课表。</string>
-    <string name="onboarding_continue">保存并前往导入课表</string>
-    <string name="onboarding_import_tip">下一步将打开导入页，请登录教务系统并进入学期理论课表页面。</string>
+    <string name="onboarding_title">欢迎使用轻课表</string>
+    <string name="onboarding_subtitle">设置教务系统与学期信息，开启你的课表</string>
+    <string name="onboarding_continue">开始使用</string>
+    <string name="onboarding_import_tip">接下来将跳转教务系统，请登录并进入课表页面</string>
     <string name="onboarding_semester_date_required">请选择学期开始日期</string>
+    <string name="onboarding_scan_title">已有课表码？</string>
+    <string name="onboarding_scan_desc">同学分享的二维码可以直接扫码导入</string>
 
     <string name="edit_title">编辑课程</string>
     <string name="edit_title_add">新增课程</string>
@@ -144,5 +150,45 @@
     <string name="edit_button">编辑</string>
     <string name="edit_delete">删除</string>
     <string name="edit_delete_confirm_title">确认删除</string>
-    <string name="edit_delete_confirm_message">确定要删除课程「%1$s」吗？此操作不可恢复。</string>
+    <string name="edit_delete_confirm_message">确定要删除「%1$s」吗？此操作不可恢复。</string>
+
+    <string name="edit_conflict_warning">时间冲突（仍可保存）</string>
+
+    <string name="settings_semester_management">学期</string>
+    <string name="settings_active_semester">当前</string>
+    <string name="settings_edit_semester">编辑学期</string>
+    <string name="settings_import_choice_desc">选择导入方式</string>
+    <string name="settings_add_semester">添加学期</string>
+    <string name="settings_delete_semester">删除</string>
+    <string name="settings_delete_semester_confirm">确定要删除「%1$s」及其全部课程吗？</string>
+    <string name="settings_semester_name">学期名称</string>
+    <string name="settings_semester_name_hint">如：2024-2025 第一学期</string>
+    <string name="settings_no_semester">还没有学期</string>
+
+    <string name="widget_description">在桌面显示今日课程</string>
+
+    <string name="share_qr_title">分享课表</string>
+    <string name="share_qr_desc">课表二维码</string>
+    <string name="scan_import_course">扫码导入</string>
+    <string name="scan_import_gallery">相册导入</string>
+    <string name="scan_guide_text">将二维码放入框内，即可自动识别</string>
+
+    <string name="settings_check_update">检查更新</string>
+    <string name="update_checking">正在检查更新…</string>
+    <string name="update_uptodate">当前已是最新版本</string>
+    <string name="update_available_title">发现新版本 %1$s</string>
+    <string name="update_changelog_label">更新日志</string>
+    <string name="update_no_changelog">暂无更新说明</string>
+    <string name="update_file_size">大小: %1$s</string>
+    <string name="update_download">立即更新</string>
+    <string name="update_later">稍后再说</string>
+    <string name="update_downloading">正在下载 %1$s</string>
+    <string name="update_downloading_progress">正在下载 %1$d%%</string>
+    <string name="update_downloading_status">下载中…</string>
+    <string name="update_download_channel">更新下载</string>
+    <string name="update_error_title">检查更新失败</string>
+    <string name="update_error">检查更新失败: %1$s</string>
+    <string name="qr_import_title">扫码导入课表</string>
+    <string name="import_confirm_message">即将导入「%1$s」\n共 %2$d 门课程\n\n导入后将自动切换至该学期。</string>
+    <string name="import_error_invalid">无法识别该二维码，请确认是轻课表生成的课表码。</string>
 </resources>

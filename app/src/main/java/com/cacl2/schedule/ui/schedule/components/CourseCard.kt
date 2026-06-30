@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -39,6 +40,8 @@ fun CourseCard(
     cellHeight: Dp,
     dayWidth: Dp,
     isDarkTheme: Boolean,
+    showTeacher: Boolean = true,
+    showLocation: Boolean = true,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,7 +107,10 @@ fun CourseCard(
             )
             .padding(horizontal = 2.dp, vertical = 2.dp)
     ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = course.courseName,
                 fontSize = if (spanCount >= 2) 11.5.sp else 10.5.sp,
@@ -116,25 +122,29 @@ fun CourseCard(
                 overflow = TextOverflow.Ellipsis
             )
 
-            Text(
-                text = locationText,
-                fontSize = 10.5.sp,
-                lineHeight = 11.5.sp,
-                color = textColor.copy(alpha = 0.9f),
-                softWrap = true,
-                maxLines = locationMaxLines,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (showLocation) {
+                Text(
+                    text = locationText,
+                    fontSize = 10.5.sp,
+                    lineHeight = 11.5.sp,
+                    color = textColor.copy(alpha = 0.9f),
+                    softWrap = true,
+                    maxLines = locationMaxLines,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
 
-            Text(
-                text = teacherText,
-                fontSize = 10.sp,
-                lineHeight = 11.sp,
-                color = textColor.copy(alpha = 0.78f),
-                softWrap = true,
-                maxLines = teacherMaxLines,
-                overflow = TextOverflow.Ellipsis
-            )
+            if (showTeacher) {
+                Text(
+                    text = teacherText,
+                    fontSize = 10.sp,
+                    lineHeight = 11.sp,
+                    color = textColor.copy(alpha = 0.78f),
+                    softWrap = true,
+                    maxLines = teacherMaxLines,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿package com.cacl2.schedule.ui.schedule
+package com.cacl2.schedule.ui.schedule
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -27,10 +31,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,7 +51,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cacl2.schedule.R
 import com.cacl2.schedule.data.local.entity.CourseEntity
 import com.cacl2.schedule.data.repository.CourseRepository
+import com.cacl2.schedule.data.repository.SemesterRepository
 import com.cacl2.schedule.data.repository.SettingsRepository
+import com.cacl2.schedule.model.SharedScheduleCodec
+import com.cacl2.schedule.model.SharedScheduleData
+import com.cacl2.schedule.model.SharedSemester
+import com.cacl2.schedule.model.ThemeMode
+import com.cacl2.schedule.ui.share.ShareQrDialog
 import com.cacl2.schedule.ui.schedule.components.ScheduleGrid
 import com.cacl2.schedule.ui.schedule.components.WeekSelector
 import com.cacl2.schedule.ui.theme.AppDimens
@@ -61,32 +67,50 @@ import com.cacl2.schedule.ui.theme.AppDimens
 fun ScheduleScreen(
     courseRepository: CourseRepository,
     settingsRepository: SettingsRepository,
+    semesterRepository: SemesterRepository,
     onEditCourse: (Long) -> Unit = {},
     viewModel: ScheduleViewModel = viewModel(
-        factory = ScheduleViewModel.Factory(courseRepository, settingsRepository)
+        factory = ScheduleViewModel.Factory(
+            courseRepository, settingsRepository, semesterRepository,
+            application = androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application
+        )
     )
 ) {
     val settings by viewModel.settings.collectAsState()
     val currentWeek by viewModel.currentWeek.collectAsState()
     val weekCoursesByWeek by viewModel.weekCoursesByWeek.collectAsState()
+    val activeSemester by viewModel.activeSemester.collectAsState()
+    val allSemesters by viewModel.allSemesters.collectAsState()
 
     var selectedCourse by remember { mutableStateOf<CourseEntity?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var hasAutoJumped by remember { mutableStateOf(false) }
+    var showShareQr by remember { mutableStateOf(false) }
+    var shareQrData by remember { mutableStateOf<SharedScheduleData?>(null) }
 
-    LaunchedEffect(settings.semesterStartDate, settings.totalWeeks) {
-        if (settings.semesterStartDate.isNotBlank()) {
-            viewModel.initCurrentWeek(settings.semesterStartDate, settings.totalWeeks)
+    // allSemesters is null until Room emits; empty list means truly no semesters
+    val totalWeeks = activeSemester?.totalWeeks ?: settings.totalWeeks
+    val semesterStartDate = activeSemester?.startDate ?: settings.semesterStartDate
+    val isDarkTheme = when (ThemeMode.fromValue(settings.themeMode)) {
+        ThemeMode.Dark -> true
+        ThemeMode.Light -> false
+        ThemeMode.System -> isSystemInDarkTheme()
+    }
+
+    LaunchedEffect(activeSemester) {
+        val semester = activeSemester
+        if (semester != null && semester.startDate.isNotBlank()) {
+            viewModel.initCurrentWeek(semester.startDate, semester.totalWeeks)
         }
     }
 
     val pagerState = rememberPagerState(
         initialPage = (currentWeek - 1).coerceAtLeast(0),
-        pageCount = { settings.totalWeeks }
+        pageCount = { totalWeeks }
     )
 
-    LaunchedEffect(currentWeek, settings.totalWeeks) {
-        val targetPage = (currentWeek - 1).coerceIn(0, (settings.totalWeeks - 1).coerceAtLeast(0))
+    LaunchedEffect(currentWeek, totalWeeks) {
+        val targetPage = (currentWeek - 1).coerceIn(0, (totalWeeks - 1).coerceAtLeast(0))
         if (pagerState.currentPage != targetPage) {
             if (!hasAutoJumped) {
                 pagerState.scrollToPage(targetPage)
@@ -123,6 +147,27 @@ fun ScheduleScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = {
+                        val semester = activeSemester
+                        val courses = weekCoursesByWeek.values.flatten().distinct()
+                        if (semester != null) {
+                            shareQrData = SharedScheduleData(
+                                semester = SharedSemester(
+                                    name = semester.name,
+                                    startDate = semester.startDate,
+                                    totalWeeks = semester.totalWeeks,
+                                    periodsPerDay = semester.periodsPerDay
+                                ),
+                                courses = courses.map { SharedScheduleCodec.toSharedCourse(it) }
+                            )
+                            showShareQr = true
+                        }
+                    }) {
+                        Icon(
+                            Icons.Default.QrCode,
+                            contentDescription = stringResource(R.string.share_qr_title)
+                        )
+                    }
                     IconButton(onClick = { onEditCourse(0L) }) {
                         Icon(
                             Icons.Default.Add,
@@ -137,7 +182,42 @@ fun ScheduleScreen(
             )
         }
     ) { innerPadding ->
-        Box(
+        if (allSemesters != null && allSemesters!!.isEmpty()) {
+            // No semesters at all — show guidance
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.surfaceContainerLow,
+                                MaterialTheme.colorScheme.surface
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(30.dp)
+                ) {
+                    Text(
+                        text = stringResource(R.string.schedule_no_semester_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = stringResource(R.string.schedule_no_semester_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.74f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
@@ -163,8 +243,8 @@ fun ScheduleScreen(
                 ) {
                     WeekSelector(
                         currentWeek = currentWeek,
-                        totalWeeks = settings.totalWeeks,
-                        semesterStartDate = settings.semesterStartDate,
+                        totalWeeks = totalWeeks,
+                        semesterStartDate = semesterStartDate,
                         onWeekChange = { viewModel.setCurrentWeek(it) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -180,45 +260,23 @@ fun ScheduleScreen(
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier.fillMaxSize(),
-                        beyondViewportPageCount = 1,
-                        contentPadding = PaddingValues(0.dp)
+                        beyondViewportPageCount = 0,
+                        contentPadding = PaddingValues(0.dp),
+                        key = { page -> page }
                     ) { page ->
                         val weekNumber = page + 1
                         val pageCourses = weekCoursesByWeek[weekNumber].orEmpty()
 
                         Box(modifier = Modifier.fillMaxSize()) {
-                            androidx.compose.animation.AnimatedVisibility(
-                                visible = currentWeekCourses.isEmpty() && weekNumber == currentWeek,
-                                enter = fadeIn(),
-                                exit = fadeOut()
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .align(Alignment.Center)
-                                        .padding(30.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = stringResource(R.string.schedule_empty_title),
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = stringResource(R.string.schedule_empty_subtitle),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.74f),
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.padding(top = 8.dp)
-                                    )
-                                }
-                            }
-
                             ScheduleGrid(
                                 courses = pageCourses,
-                                periodsPerDay = settings.periodsPerDay,
+                                periodsPerDay = activeSemester?.periodsPerDay ?: settings.periodsPerDay,
                                 showWeekend = settings.showWeekend,
-                                semesterStartDate = settings.semesterStartDate,
+                                semesterStartDate = semesterStartDate,
                                 currentWeek = weekNumber,
+                                isDarkTheme = isDarkTheme,
+                                showTeacher = settings.showTeacher,
+                                showLocation = settings.showLocation,
                                 onCourseClick = { selectedCourse = it }
                             )
                         }
@@ -226,6 +284,7 @@ fun ScheduleScreen(
                 }
             }
         }
+        } // end else (has semesters)
     }
 
     selectedCourse?.let { course ->
@@ -309,6 +368,13 @@ fun ScheduleScreen(
             }
         )
     }
+
+    if (showShareQr && shareQrData != null) {
+        ShareQrDialog(
+            data = shareQrData!!,
+            onDismiss = { showShareQr = false }
+        )
+    }
 }
 
 @Composable
@@ -329,5 +395,3 @@ private fun weekTypeName(type: Int): String = when (type) {
     2 -> stringResource(R.string.schedule_week_type_even)
     else -> ""
 }
-
-

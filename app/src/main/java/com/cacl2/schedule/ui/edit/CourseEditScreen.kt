@@ -1,5 +1,6 @@
 package com.cacl2.schedule.ui.edit
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -45,21 +48,30 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.app.Application
 import com.cacl2.schedule.R
+import com.cacl2.schedule.data.local.entity.CourseEntity
 import com.cacl2.schedule.data.repository.CourseRepository
+import com.cacl2.schedule.data.repository.SettingsRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CourseEditScreen(
     courseId: Long,
     courseRepository: CourseRepository,
+    settingsRepository: SettingsRepository,
     onNavigateBack: () -> Unit,
     viewModel: CourseEditViewModel = viewModel(
-        factory = CourseEditViewModel.Factory(courseRepository)
+        factory = CourseEditViewModel.Factory(
+            courseRepository,
+            settingsRepository,
+            application = androidx.compose.ui.platform.LocalContext.current.applicationContext as Application
+        )
     )
 ) {
     val formState by viewModel.formState.collectAsState()
     val saveState by viewModel.saveState.collectAsState()
+    val conflicts by viewModel.conflicts.collectAsState()
     var validationError by remember { mutableStateOf<EditValidationError?>(null) }
 
     var dayOfWeekExpanded by remember { mutableStateOf(false) }
@@ -298,6 +310,41 @@ fun CourseEditScreen(
                 )
             }
 
+            if (conflicts.isNotEmpty()) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.errorContainer,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(
+                                text = "⚠",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = stringResource(R.string.edit_conflict_warning),
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.SemiBold,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(6.dp))
+                        conflicts.forEach { course ->
+                            Text(
+                                text = "• ${course.courseName} (周${dayOfWeekLabel(course.dayOfWeek)} ${course.startPeriod}-${course.endPeriod}节, 第${course.startWeek}-${course.endWeek}周${conflictWeekTypeLabel(course.weekType)})",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.85f)
+                            )
+                        }
+                    }
+                }
+            }
+
             Button(
                 onClick = {
                     validationError = viewModel.save()
@@ -349,3 +396,10 @@ private fun weekTypeOptions(): List<Pair<Int, String>> = listOf(
     1 to stringResource(R.string.edit_week_type_odd),
     2 to stringResource(R.string.edit_week_type_even)
 )
+
+@Composable
+private fun conflictWeekTypeLabel(type: Int): String = when (type) {
+    1 -> stringResource(R.string.schedule_week_type_odd)
+    2 -> stringResource(R.string.schedule_week_type_even)
+    else -> ""
+}

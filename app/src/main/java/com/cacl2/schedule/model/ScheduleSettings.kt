@@ -8,5 +8,9 @@ data class ScheduleSettings(
     val periodsPerDay: Int = 12,
     val semesterStartDate: String = "",
     val showWeekend: Boolean = true,
-    val qiangzhiUrl: String = ""
+    val qiangzhiUrl: String = "",
+    val themeMode: Int = 0,
+    val activeSemesterId: String = "default",
+    val showTeacher: Boolean = true,
+    val showLocation: Boolean = true
 )
